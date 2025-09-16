@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue ilə İmtahan (2 Sual)</title>
+  <script src="https://unpkg.com/vue@3"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #eef2f3;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      width: 400px;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background-color: #0056b3; }
+    button.disabled { opacity: 0.6; cursor: not-allowed; }
+    .exam-area {
+      border: 2px dashed #444;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 10px;
+      background: #f9f9f9;
+    }
+    .button-true { background-color: green !important; }
+    .button-false { background-color: red !important; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+
+      <!-- Giriş Formu -->
+      <div v-if="!started && !finished">
+        <h2>İmtahana xoş gəlmisiniz!</h2>
+        <p><strong>Diqqət:</strong> Mouse imtahan sahəsindən çıxsa və ya zaman bitsə, imtahan sonlanacaq.</p>
+        <form @submit.prevent="startExam">
+          <input v-model="name" type="text" placeholder="Ad" required>
+          <input v-model="surname" type="text" placeholder="Soyad" required>
+          <button type="submit">İmtahana Başla</button>
+        </form>
+      </div>
+
+      <!-- İmtahan Sahəsi -->
+      <div v-if="started" class="exam-area" @mouseleave="endExam">
+        <p>Zaman: {{ time }} saniyə</p>
+        <h3>{{ currentQuestion.text }}</h3>
+        <div v-for="(opt, idx) in currentQuestion.options" :key="idx">
+          <button
+            :class="[
+              answerSelected && idx === currentQuestion.correct ? 'button-true' : '',
+              answerSelected && answerSelectedIndex === idx && idx !== currentQuestion.correct ? 'button-false' : '',
+              answerSelected ? 'disabled' : ''
+            ]"
+            @click="checkAnswer(idx)"
+            :disabled="answerSelected"
+          >
+            {{ opt }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Nəticə -->
+      <div v-if="finished">
+        <h2>İmtahan Bitdi!</h2>
+        <p>Çox sağ ol, {{ name }} {{ surname }}!</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    Vue.createApp({
+      data() {
+        return {
+          name: '',
+          surname: '',
+          started: false,
+          finished: false,
+          time: 30,
+          timer: null,
+          questions: [
+            {
+              text: 'Vue hansı framework-dür?',
+              options: ['Backend', 'Frontend', 'Database', 'Server'],
+              correct: 1
+            },
+            {
+              text: 'JavaScript hansı tip dildir?',
+              options: ['Statik', 'Dinamik', 'Kompilyatorlu', 'C dilinə əsaslı'],
+              correct: 1
+            }
+          ],
+          currentIndex: 0,
+          answerSelected: false,
+          answerSelectedIndex: null
+        }
+      },
+      computed: {
+        currentQuestion() {
+          return this.questions[this.currentIndex]
+        }
+      },
+      methods: {
+        startExam() {
+          alert("Diqqət! Mouse imtahan sahəsindən çıxsa və ya zaman bitsə, imtahan sonlanacaq.");
+          this.started = true
+          this.time = 30
+          this.answerSelected = false
+          this.answerSelectedIndex = null
+          this.currentIndex = 0
+          this.timer = setInterval(() => {
+            if (this.time > 0) this.time--
+            else this.endExam()
+          }, 1000)
+        },
+        checkAnswer(idx) {
+          this.answerSelected = true
+          this.answerSelectedIndex = idx
+          setTimeout(() => {
+            if (this.currentIndex < this.questions.length - 1) {
+              this.currentIndex++
+              this.answerSelected = false
+              this.answerSelectedIndex = null
+            } else {
+              this.endExam()
+            }
+          }, 1000)
+        },
+        endExam() {
+          if (!this.finished) {
+            clearInterval(this.timer)
+            this.started = false
+            this.finished = true
+            alert("Mouse sahədən çıxdı və ya zaman bitdi. İmtahan sonlandı.");
+          }
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
